@@ -210,13 +210,13 @@ void auto_updater::download_update_contents()
     if(!update_info_local_.empty() && !update_info_remote_.empty()){
         iter_type remote_it = std::begin(update_info_remote_);
         iter_type local_it = update_info_local_.find(remote_it->first);
-        qDebug()<<"download_update_contents : "<<remote_it->second.display_name_;
-        QString local_name;
+        qDebug()<<"download_update_contents : "<<remote_it->second.display_name_;        
         QString remote_name = remote_it->second.display_name_;
         if(local_it == std::end(update_info_local_)){
-            qDebug()<<"local_it == std::end(update_info_local_)";            
-            download_update_content(remote_it->second);
+            qDebug()<<"local_it == std::end(update_info_local_)";
+            auto const &info = remote_it->second;
             update_info_remote_.erase(remote_it);
+            download_update_content(info);
         }else{
             if(remote_it->second.version_ > local_it->second.version_){
                 qDebug()<<"remote_it->second.version_ > local_it->second.version_";
