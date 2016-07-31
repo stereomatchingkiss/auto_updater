@@ -16,7 +16,6 @@
 #include <QProcess>
 #include <QUrl>
 
-#include <iostream>
 #include <iterator>
 
 auto_updater::auto_updater(QString const &app_to_start, QObject *parent) :
@@ -133,6 +132,12 @@ void auto_updater::erase_old_contents()
     start_updated_app();
 }
 
+void auto_updater::exit_app()
+{
+    qDebug()<<"press any key to exit...";
+    exit(0);
+}
+
 void auto_updater::start_updated_app()
 {
     if(!app_to_start_.isEmpty()){
@@ -140,16 +145,14 @@ void auto_updater::start_updated_app()
         connect(process, &QProcess::errorOccurred, [&](QProcess::ProcessError)
         {
             qDebug()<<process->errorString();
-            qDebug()<<"press any key to exit...";
-            exit(0);
+            exit_app();
         });
         app_to_start_.replace("$${PARENT}", parent_path_);
         process->startDetached(app_to_start_);
         process->waitForStarted(-1);
     }
 
-    qDebug()<<"press any key to exit...";
-    exit(0);
+     exit_app();
 }
 
 void auto_updater::download_erase_list()
@@ -293,6 +296,7 @@ void auto_updater::update_info_finished()
         }else{
             qDebug()<<"cannot update update_info.xml : "<<reply->errorString();
             qDebug()<<"please fix the network issue before update";
+            exit_app();
         }
     }
 }
