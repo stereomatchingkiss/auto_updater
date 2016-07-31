@@ -141,7 +141,6 @@ void auto_updater::start_updated_app()
         {
             qDebug()<<process->errorString();
             qDebug()<<"press any key to exit...";
-            std::cin.get();
             exit(0);
         });
         app_to_start_.replace("$${PARENT}", parent_path_);
@@ -150,7 +149,6 @@ void auto_updater::start_updated_app()
     }
 
     qDebug()<<"press any key to exit...";
-    std::cin.get();
     exit(0);
 }
 
@@ -214,15 +212,16 @@ void auto_updater::download_update_contents()
         QString remote_name = remote_it->second.display_name_;
         if(local_it == std::end(update_info_local_)){
             qDebug()<<"local_it == std::end(update_info_local_)";
-            auto const &info = remote_it->second;
+            auto const info = remote_it->second;
             update_info_remote_.erase(remote_it);
             download_update_content(info);
         }else{
             if(remote_it->second.version_ > local_it->second.version_){
                 qDebug()<<"remote_it->second.version_ > local_it->second.version_";
-                download_update_content(remote_it->second);
+                auto const info = remote_it->second;
                 update_info_local_.erase(local_it);
                 update_info_remote_.erase(remote_it);
+                download_update_content(info);
             }else{
                 qDebug()<<"do not need to update content : "<<remote_it->second.display_name_;
                 update_info_local_.erase(local_it);
