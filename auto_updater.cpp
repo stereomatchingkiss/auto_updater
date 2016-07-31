@@ -214,8 +214,7 @@ void auto_updater::download_update_contents()
         QString local_name;
         QString remote_name = remote_it->second.display_name_;
         if(local_it == std::end(update_info_local_)){
-            qDebug()<<"local_it == std::end(update_info_local_)";
-            local_name = local_it->second.display_name_;
+            qDebug()<<"local_it == std::end(update_info_local_)";            
             download_update_content(remote_it->second);
             update_info_remote_.erase(remote_it);
         }else{
