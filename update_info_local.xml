@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Installer>	
+	<RemoteRepositories>
+	    <Repository>
+			<Url>https://dl.dropboxusercontent.com/s/2s0qdp8h1ddkd1p/update_info_remote.xml?dl=0</Url>            
+			<Version>1.0</Version>
+            <DisplayName>update_info</DisplayName>
+			<Unzip></Unzip>
+			<CopyTo></CopyTo>
+        </Repository>	
+        <Repository>
+			<Url>https://dl.dropboxusercontent.com/s/g82r2087c9tch32/qt5_dll.zip?dl=0</Url>            
+			<Version>1.0</Version>
+            <DisplayName>qt5_dll</DisplayName>
+			<Unzip>qcompress_folder</Unzip>
+			<CopyTo>$${PARENT}</CopyTo>
+        </Repository>		
+		<Repository>
+			<Url>https://dl.dropboxusercontent.com/s/pol0yt6kvnyljvc/opencv_dll.zip?dl=0</Url>            
+            <Version>1.0</Version>
+            <DisplayName>opencv_dll</DisplayName>
+			<Unzip>qcompress_folder</Unzip>
+			<CopyTo>$${PARENT}</CopyTo>
+        </Repository>		
+		<Repository>
+			<Url>https://dl.dropboxusercontent.com/s/fp0jflom0z1qnof/similar_vision.zip?dl=0</Url>            
+			<Version>1.0</Version>
+            <DisplayName>similar_vision_exe</DisplayName>
+			<Unzip>qcompress_file</Unzip>
+			<CopyTo>$${PARENT}</CopyTo>
+        </Repository>
+		<Repository>
+			<Url>https://dl.dropboxusercontent.com/s/m90o4ot444jlo0h/qwt.dll.zip?dl=0</Url>            
+			<Version>1.0</Version>
+            <DisplayName>qwt.dll</DisplayName>
+			<Unzip>qcompress_file</Unzip>
+			<CopyTo>$${PARENT}</CopyTo>
+        </Repository>
+    </RemoteRepositories>
+</Installer>
