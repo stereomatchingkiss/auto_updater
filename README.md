@@ -34,7 +34,7 @@ and at the same folder of the auto_update binary.
 2. Create a file called "update_info_remote.xml", this file should contain the informations of different components you want to update,
 place at the remote server specify by "update_info_local.xml".
 3. Create a file called "file_list.txt", specify the location(on remote server) of the erase_list.txt
-4. Ceate a file called "erase_list.txt", this file should contain the absolute paths of the files/folders you want to delete.
+4. Ceate a file called "erase_list.txt" at remote server, this file should contain the absolute paths of the files/folders you want to delete.
 5. (Optional) Specify the absolute path of the app you want to start after the update are finished.
 
 ##Example--update_info_local.xml
@@ -105,6 +105,24 @@ place at the remote server specify by "update_info_local.xml".
   </RemoteRepositories>
 </Installer>
 ```
+
+##Example--file_list.txt
+
+```
+erase_list https://dl.dropboxusercontent.com/s/23e7v210wyzvtms/erase_list.txt?dl=0
+```
+
+First column is the name(key) of the file, erase_list means the file pointed by the url(second column) stored the absolute path 
+of the files/folders you want to delete.By now file_list.txt only support one type of file(erase_list), in the future I may add more.
+
+##Example--erase_list.txt
+```
+$${PARENT}/libEGL.dll
+$${PARENT}/Qt5Widgets.dll
+C:\turf_club_statistic\Qt5Network.dll
+```
+
+Every line of the erase_list.txt is the absolute path of the file/folder you want to delete
 
 ##Command line examples
 
