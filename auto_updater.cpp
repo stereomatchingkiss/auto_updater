@@ -136,17 +136,17 @@ void auto_updater::erase_old_contents()
 void auto_updater::start_updated_app()
 {
     if(!app_to_start_.isEmpty()){
-        QProcess process;
-        connect(&process, &QProcess::errorOccurred, [&](QProcess::ProcessError)
+        QProcess *process = new QProcess(this);
+        connect(process, &QProcess::errorOccurred, [&](QProcess::ProcessError)
         {
-            qDebug()<<process.errorString();
+            qDebug()<<process->errorString();
             qDebug()<<"press any key to exit...";
             std::cin.get();
             exit(0);
         });
         app_to_start_.replace("$${PARENT}", parent_path_);
-        process.startDetached(app_to_start_);
-        process.waitForStarted(-1);
+        process->startDetached(app_to_start_);
+        process->waitForStarted(-1);
     }
 
     qDebug()<<"press any key to exit...";
