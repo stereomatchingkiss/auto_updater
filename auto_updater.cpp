@@ -233,6 +233,7 @@ void auto_updater::download_update_contents()
         }
         qDebug()<<remote_name<<" : erase update info remote";
     }else{
+        update_local_update_file();
         download_erase_list();
     }
 }
@@ -251,7 +252,6 @@ void auto_updater::update_info_remote(QNetworkReply *reply)
 
         update_info_parser parser;
         update_info_remote_ = parser.read("update_info_remote.xml");
-        //update_local_update_file();
         auto it = update_info_remote_.find("update_info");
         if(it != std::end(update_info_remote_)){
             if(it->second.version_ > update_info_local_["update_info"].version_){
