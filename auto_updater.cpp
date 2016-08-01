@@ -260,15 +260,17 @@ void auto_updater::update_info_remote(QNetworkReply *reply)
                 update_info_local_.erase("update_info");
                 download_update_contents();
             }else{
-                qDebug()<<"nothing to update because update_info is equal or less";
+                qDebug()<<"nothing to update because version is equal or less";
             }
         }else{
             qDebug()<<"update_info at remote repository do not contain update_info,"
                       "update failed";
+            exit_app();
         }
     }else{
         qDebug()<<"Cannot write data into update_info_remote.xml, "
                   "fail to update";
+        exit_app();
     }
 }
 
