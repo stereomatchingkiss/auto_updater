@@ -30,6 +30,7 @@ private:
     void download_update_content(update_info info);
 
     void erase_old_contents();
+    void exit_app();
 
     void start_updated_app();
 
@@ -43,7 +44,7 @@ private:
     QNetworkAccessManager *manager_;
     QString parent_path_;
     std::map<QString, update_info> update_info_local_;
-    std::map<QString, update_info> update_info_remote_;
+    std::map<QString, update_info> update_info_remote_;    
 };
 
 #endif // AUTO_UPDATER_H
