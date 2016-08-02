@@ -174,6 +174,7 @@ void auto_updater::download_erase_list()
         });
     }else{
         qDebug()<<"cannot find erase list";
+        start_updated_app();
     }
 }
 
