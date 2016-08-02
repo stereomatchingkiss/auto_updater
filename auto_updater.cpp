@@ -264,6 +264,7 @@ void auto_updater::update_info_remote(QNetworkReply *reply)
                 download_update_contents();
             }else{
                 qDebug()<<"nothing to update because version is equal or less";
+                start_updated_app();
             }
         }else{
             qDebug()<<"update_info at remote repository do not contain update_info,"
@@ -284,7 +285,7 @@ void auto_updater::update_local_update_file()
                     QCoreApplication::applicationDirPath() +
                     "/update_info_local.xml")){
         qDebug()<<"cannot update update_info_local.xml";
-    }    
+    }
 }
 
 void auto_updater::update_info_finished()
