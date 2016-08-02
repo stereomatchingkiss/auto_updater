@@ -284,13 +284,14 @@ void auto_updater::update_local_update_file()
                                           QCoreApplication::applicationDirPath() +
                                           "/update_info_local_temp.xml");
     if(!QFile::copy(QCoreApplication::applicationDirPath() +
-                    "update_info_remote.xml",
+                    "/update_info_remote.xml",
                     QCoreApplication::applicationDirPath() +
-                    "update_info_local.xml")){
+                    "/update_info_local.xml")){
         qDebug()<<"cannot update update_info_local.xml";
     }
     if(can_rename){
-        QFile::remove("update_info_local_temp.xml");
+        QFile::remove(QCoreApplication::applicationDirPath() +
+                      "/update_info_local_temp.xml");
     }
 }
 
