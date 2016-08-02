@@ -26,7 +26,7 @@ update_info_parser::read(QString const &file_name)
             qDebug()<<"start element tag should be \"Repository\"";
         }
     }else{
-        qDebug()<<"cannot open config.xml";
+        qDebug()<<"cannot open " + file_name;
     }
 
     qDebug()<<"parse end";
