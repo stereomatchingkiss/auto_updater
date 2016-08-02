@@ -34,7 +34,8 @@ void auto_updater::start()
     download_details_.clear();
     qDebug()<<"start config parse";
     update_info_parser info_parser;
-    update_info_local_ = info_parser.read("update_info_local.xml");
+    update_info_local_ = info_parser.read(QCoreApplication::applicationDirPath() +
+                                          "/update_info_local.xml");
 
     auto update_it = update_info_local_.find("update_info");
     if(update_it != std::end(update_info_local_)){
@@ -252,7 +253,8 @@ void auto_updater::update_info_remote(QNetworkReply *reply)
         file.close();
 
         update_info_parser parser;
-        update_info_remote_ = parser.read("update_info_remote.xml");
+        update_info_remote_ = parser.read(QCoreApplication::applicationDirPath() +
+                                          "/update_info_remote.xml");
         auto it = update_info_remote_.find("update_info");
         if(it != std::end(update_info_remote_)){
             if(it->second.version_ > update_info_local_["update_info"].version_){
@@ -276,9 +278,13 @@ void auto_updater::update_info_remote(QNetworkReply *reply)
 
 void auto_updater::update_local_update_file()
 {
-    bool const can_rename = QFile::rename("update_info_local.xml",
-                                          "update_info_local_temp.xml");
-    if(!QFile::copy("update_info_remote.xml",
+    bool const can_rename = QFile::rename(QCoreApplication::applicationDirPath() +
+                                          "/update_info_local.xml",
+                                          QCoreApplication::applicationDirPath() +
+                                          "/update_info_local_temp.xml");
+    if(!QFile::copy(QCoreApplication::applicationDirPath() +
+                    "update_info_remote.xml",
+                    QCoreApplication::applicationDirPath() +
                     "update_info_local.xml")){
         qDebug()<<"cannot update update_info_local.xml";
     }
