@@ -279,20 +279,12 @@ void auto_updater::update_info_remote(QNetworkReply *reply)
 
 void auto_updater::update_local_update_file()
 {
-    bool const can_rename = QFile::rename(QCoreApplication::applicationDirPath() +
-                                          "/update_info_local.xml",
-                                          QCoreApplication::applicationDirPath() +
-                                          "/update_info_local_temp.xml");
     if(!QFile::copy(QCoreApplication::applicationDirPath() +
                     "/update_info_remote.xml",
                     QCoreApplication::applicationDirPath() +
                     "/update_info_local.xml")){
         qDebug()<<"cannot update update_info_local.xml";
-    }
-    if(can_rename){
-        QFile::remove(QCoreApplication::applicationDirPath() +
-                      "/update_info_local_temp.xml");
-    }
+    }    
 }
 
 void auto_updater::update_info_finished()
