@@ -41,10 +41,10 @@ int main(int argc, char *argv[])
     return a.exec();
 }
 
-void logFunction(const QString &message, QsLogging::Level level)
+void logFunction(const QsLogging::LogMessage &message)
 {
-    qDebug() << "From log function: " << qPrintable(message)
-             << " " << static_cast<int>(level);
+    qDebug() << "From log function: " << qPrintable(message.formatted)
+             << " " << static_cast<int>(message.level);
 }
 
 void setup_logger(QString const &app_dir_path)
