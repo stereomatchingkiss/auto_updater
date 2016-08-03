@@ -15,6 +15,8 @@ public:
     update_info_parser();
 
     std::map<QString, update_info> read(QString const &file_name);
+    static void write(std::vector<std::pair<update_info, update_info>> const &info_vec,
+                      QString const &save_as);
 
 private:
     void process_repository();
