@@ -31,8 +31,8 @@ int main(int argc, char *argv[])
     parser.process(a);
 
     if(!parser.isSet(app_to_start)){
-        qDebug()<<"Has not specify app to start, auto_update will "
-                  "not start the app after update finished";
+        QLOG_WARN()<<"Has not specify app to start, auto_update will "
+                     "not start the app after update finished";
     }
 
     auto_updater au(parser.value(app_to_start));
