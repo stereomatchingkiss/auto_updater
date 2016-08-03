@@ -198,7 +198,9 @@ void auto_updater::update_content()
                 auto &local_info = it->second.first;
                 auto const &remote_info = it->second.second;
                 display_name = remote_info.display_name_ + " ";
-                local_info.version_ = remote_info.version_;
+                if(!local_info.version_.isEmpty()){
+                    local_info.version_ = remote_info.version_;
+                }
             }
             QLOG_ERROR()<<QString("download%1fail : %2").
                           arg(display_name).arg(reply->errorString());

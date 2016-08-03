@@ -50,7 +50,7 @@ private:
     //first info is the info of update_info_local.xml,
     //second info is the info of update_info_remote.xml
     //if the content info do not exist in the update_info_local.xml,
-    //the QString will be empty
+    //the version_ of local info will be empty
     std::map<QNetworkReply*, std::pair<update_info, update_info>> update_records_;
 };
 
