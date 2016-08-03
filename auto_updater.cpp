@@ -193,9 +193,9 @@ void auto_updater::update_content()
             }
         }else{
             auto it = update_records_.find(reply);
-            QString display_name;
+            QString display_name(" ");
             if(it != std::end(update_records_)){
-                display_name = " " + it->second.second.display_name_ + " ";
+                display_name = it->second.second.display_name_ + " ";
                 it->second.second.version_ = it->second.first;
             }
             QLOG_ERROR()<<QString("download%1fail : %2").
