@@ -15,6 +15,7 @@ class auto_updater : public QObject
 public:
     explicit auto_updater(QString const &app_to_start, QObject *parent = nullptr);
 
+    bool need_to_update();
     void start();    
 
 private:
@@ -34,6 +35,7 @@ private:
     void erase_old_contents();
     void exit_app();
 
+    void prepare_download_info();
     void start_updated_app();
 
     void update_content();
@@ -41,7 +43,8 @@ private:
     void update_local_update_file();
     void update_remote_contents(QNetworkReply *reply);
 
-    QString app_to_start_;        
+    QString app_to_start_;
+    bool can_update_remote_contents_;
     QNetworkAccessManager *manager_;
     QString parent_path_;
     std::map<QString, update_info> update_info_local_;
@@ -51,7 +54,7 @@ private:
     //second info is the info of update_info_remote.xml
     //if the content info do not exist in the update_info_local.xml,
     //the version_ of local info will be empty
-    std::map<QNetworkReply*, std::pair<update_info, update_info>> update_records_;
+    std::map<QNetworkReply*, std::pair<update_info, update_info>> update_records_;    
 };
 
 #endif // AUTO_UPDATER_H

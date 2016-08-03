@@ -23,6 +23,7 @@
 auto_updater::auto_updater(QString const &app_to_start, QObject *parent) :
     QObject(parent),
     app_to_start_(app_to_start),
+    can_update_remote_contents_(true),
     manager_(new QNetworkAccessManager(this))
 {
     QDir dir(QCoreApplication::applicationDirPath());
@@ -31,26 +32,22 @@ auto_updater::auto_updater(QString const &app_to_start, QObject *parent) :
     }
 }
 
+bool auto_updater::need_to_update()
+{
+    prepare_download_info();
+    if(update_info_local_.find("update_info") != std::end(update_info_local_)){
+        if(update_info_remote_.find("update_info") != std::end(update_info_remote_)){
+            return true;
+        }
+    }
+
+    return false;
+}
+
 void auto_updater::start()
 {
-    update_records_.clear();
-    QLOG_INFO()<<"start config parse";
-    update_info_parser info_parser;
-    update_info_local_ = info_parser.read(QCoreApplication::applicationDirPath() +
-                                          "/update_info_local.xml");
-
-    auto update_it = update_info_local_.find("update_info");
-    if(update_it != std::end(update_info_local_)){
-        auto *reply = manager_->get(QNetworkRequest(update_it->second.url_));
-        connect(reply, &QNetworkReply::finished, this,
-                &auto_updater::update_local_info_finished);
-        connect(reply, &QNetworkReply::downloadProgress,
-                [this](qint64 bytesReceived, qint64 bytesTotal)
-        {
-            QLOG_INFO()<<QString("Download update_info : %1/%2").arg(bytesReceived).
-                         arg(bytesTotal);
-        });
-    }
+    can_update_remote_contents_ = true;
+    prepare_download_info();
 }
 
 void auto_updater::decompress_update_content(update_info const &info,
@@ -138,6 +135,28 @@ void auto_updater::exit_app()
 {
     QLOG_INFO()<<"press any key to exit...";
     exit(0);
+}
+
+void auto_updater::prepare_download_info()
+{
+    update_records_.clear();
+    QLOG_INFO()<<"start parsing";
+    update_info_parser info_parser;
+    update_info_local_ = info_parser.read(QCoreApplication::applicationDirPath() +
+                                          "/update_info_local.xml");
+
+    auto update_it = update_info_local_.find("update_info");
+    if(update_it != std::end(update_info_local_)){
+        auto *reply = manager_->get(QNetworkRequest(update_it->second.url_));
+        connect(reply, &QNetworkReply::finished, this,
+                &auto_updater::update_local_info_finished);
+        connect(reply, &QNetworkReply::downloadProgress,
+                [this](qint64 bytesReceived, qint64 bytesTotal)
+        {
+            QLOG_INFO()<<QString("Download update_info : %1/%2").arg(bytesReceived).
+                         arg(bytesTotal);
+        });
+    }
 }
 
 void auto_updater::start_updated_app()
@@ -327,7 +346,7 @@ void auto_updater::update_local_info_finished()
         guard_delete_later<QNetworkReply> guard(reply);
         if(reply->error() == QNetworkReply::NoError){
             QLOG_INFO()<<"start update info remote";
-            if(download_remote_update_info(reply)){
+            if(download_remote_update_info(reply) && can_update_remote_contents_){
                 update_remote_contents(reply);
             }
         }else{
