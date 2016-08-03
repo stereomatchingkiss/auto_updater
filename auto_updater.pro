@@ -3,6 +3,8 @@ QT -= gui
 
 INCLUDEPATH += ../
 
+include(../pri/qslog.pri)
+
 CONFIG += c++11
 
 TARGET = auto_updater

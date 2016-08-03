@@ -4,8 +4,9 @@
 #include <qt_enhance/compressor/file_compressor.hpp>
 #include <qt_enhance/compressor/folder_compressor.hpp>
 
+#include <QsLog.h>
+
 #include <QCoreApplication>
-#include <QDebug>
 #include <QByteArray>
 #include <QFile>
 #include <QFileInfo>
@@ -14,6 +15,7 @@
 #include <QNetworkReply>
 #include <QNetworkRequest>
 #include <QProcess>
+#include <QtGlobal>
 #include <QUrl>
 
 #include <iterator>
@@ -32,7 +34,7 @@ auto_updater::auto_updater(QString const &app_to_start, QObject *parent) :
 void auto_updater::start()
 {    
     download_details_.clear();
-    qDebug()<<"start config parse";
+    QLOG_INFO()<<"start config parse";
     update_info_parser info_parser;
     update_info_local_ = info_parser.read(QCoreApplication::applicationDirPath() +
                                           "/update_info_local.xml");
@@ -45,8 +47,8 @@ void auto_updater::start()
         connect(reply, &QNetworkReply::downloadProgress,
                 [this](qint64 bytesReceived, qint64 bytesTotal)
         {
-            qDebug()<<QString("Download update_info : %1/%2").arg(bytesReceived).
-                      arg(bytesTotal);
+            QLOG_INFO()<<QString("Download update_info : %1/%2").arg(bytesReceived).
+                         arg(bytesTotal);
         });
     }
 }
@@ -58,24 +60,23 @@ void auto_updater::decompress_update_content(download_iter_type it,
     copy_to.replace("$${PARENT}", parent_path_);
     QString file_name = it->second.display_name_ + ".zip";
     QString const zip_file = copy_to + "/" + file_name;
-    qDebug()<<"update content path : "<<zip_file;
-    qDebug()<<"copy update content to : "<<copy_to;
+    QLOG_INFO()<<"update content path : "<<zip_file;
+    QLOG_INFO()<<"copy update content to : "<<copy_to;
     QFile file(zip_file);
     if(file.open(QIODevice::WriteOnly)){
         file.write(reply->readAll());
         file.close();
         if(it->second.unzip_ == "qcompress_folder"){
-            qDebug()<<"decompress folder : "<<file_name;
+            QLOG_INFO()<<"decompress folder : "<<file_name;
             qte::cp::folder_compressor fc;
             fc.decompress_folder(zip_file, copy_to);
         }else if(it->second.unzip_ == "qcompress_file"){
-            qDebug()<<"decompress file : "<<file_name;
+            QLOG_INFO()<<"decompress folder : "<<file_name;
             qte::cp::decompress(zip_file, copy_to + "/" + it->second.display_name_);
         }
         file.remove();
     }else{
-        qDebug()<<"Cannot write into file : "
-               <<zip_file;
+        QLOG_ERROR()<<"Cannot write into file : "<<zip_file;
     }
 }
 
@@ -95,7 +96,7 @@ std::map<QString, QString> auto_updater::create_file_maps() const
             line = stream.readLine();
         }
     }else{
-        qDebug()<<"cannot read file_list.txt";
+        QLOG_DEBUG()<<"cannot read file_list.txt";
     }
 
     return file_maps;
@@ -107,7 +108,7 @@ void auto_updater::erase_old_contents()
     if(reply){
         guard_delete_later<QNetworkReply> guard(reply);
         if(reply->error() != QNetworkReply::NoError){
-            qDebug()<<reply->errorString();
+            QLOG_ERROR()<<reply->errorString();
         }else{
             QString const erase_list = reply->readAll();
             QStringList lists = erase_list.split("\n");
@@ -115,15 +116,15 @@ void auto_updater::erase_old_contents()
                 if(!list.isEmpty()){
                     list.replace("$${PARENT}", parent_path_);
                     list = list.simplified();
-                    qDebug()<<list;
+                    QLOG_DEBUG()<<"list to removed : "<<list;
                     if(QFileInfo(list).isDir()){
                         QDir dir(list);
                         if(!dir.removeRecursively()){
-                            qDebug()<<"cannot remove dir : "<<list;
+                            QLOG_DEBUG()<<"cannot remove dir : "<<list;
                         }
                     }else{
                         if(!QFile::remove(list)){
-                            qDebug()<<"cannot remove file : "<<list;
+                            QLOG_DEBUG()<<"cannot remove file : "<<list;
                         }
                     }
                 }
@@ -135,45 +136,44 @@ void auto_updater::erase_old_contents()
 
 void auto_updater::exit_app()
 {
-    qDebug()<<"press any key to exit...";
+    QLOG_INFO()<<"press any key to exit...";
     exit(0);
 }
 
 void auto_updater::start_updated_app()
 {
     if(!app_to_start_.isEmpty()){
-        QProcess *process = new QProcess(this);
-        connect(process, &QProcess::errorOccurred, [&](QProcess::ProcessError)
-        {
-            qDebug()<<process->errorString();
-            exit_app();
-        });
+        QLOG_INFO()<<"app_to_start is "<<app_to_start_;
         app_to_start_.replace("$${PARENT}", parent_path_);
-        process->startDetached(app_to_start_);
-        process->waitForStarted(-1);
+        if(!QProcess::startDetached(app_to_start_)){
+            QLOG_DEBUG()<<"cannot start the process : "<<app_to_start_;
+            exit_app();
+        }
+    }else{
+        QLOG_INFO()<<"app_to_start is empty";
     }
 
-     exit_app();
+    exit_app();
 }
 
 void auto_updater::download_erase_list()
 {
-    qDebug()<<__func__;
+    QLOG_INFO()<<__func__;
     std::map<QString, QString> const file_maps = create_file_maps();
     auto it = file_maps.find("erase_list");
     if(it != std::end(file_maps)){
-        qDebug()<<"erase_list location : "<<it->second;
+        QLOG_INFO()<<"erase_list location : "<<it->second;
         auto *reply = manager_->get(QNetworkRequest(it->second));
         connect(reply, &QNetworkReply::finished, this,
                 &auto_updater::erase_old_contents);
         connect(reply, &QNetworkReply::downloadProgress,
                 [](qint64 bytesReceived, qint64 bytesTotal)
         {
-            qDebug()<<QString("Download erase_list.txt : %1/%2").
-                      arg(bytesReceived).arg(bytesTotal);
+            QLOG_INFO()<<QString("Download erase_list.txt : %1/%2").
+                         arg(bytesReceived).arg(bytesTotal);
         });
     }else{
-        qDebug()<<"cannot find erase list";
+        QLOG_INFO()<<"cannot find erase list";
         start_updated_app();
     }
 }
@@ -185,9 +185,9 @@ void auto_updater::update_content()
         guard_delete_later<QNetworkReply> guard(reply);
         download_iter_type it = download_details_.find(reply);
         if(it != std::end(download_details_)){
-            qDebug()<<"update_content of : "<<it->second.display_name_;
+            QLOG_INFO()<<"update_content of : "<<it->second.display_name_;
             decompress_update_content(it, reply);
-            qDebug()<<"update_content "<<it->second.display_name_<<" finished";
+            QLOG_INFO()<<"update_content "<<it->second.display_name_<<" finished";
         }
     }
     download_update_contents();
@@ -203,7 +203,7 @@ void auto_updater::download_update_content(update_info info)
     connect(reply, &QNetworkReply::downloadProgress,
             [this, name](qint64 bytesReceived, qint64 bytesTotal)
     {
-        qDebug()<<QString("Download %1 : %2/%3").arg(name).
+        QLOG_INFO()<<QString("Download %1 : %2/%3").arg(name).
                   arg(bytesReceived).arg(bytesTotal);
     });
 }
@@ -213,28 +213,28 @@ void auto_updater::download_update_contents()
     if(!update_info_local_.empty() && !update_info_remote_.empty()){
         iter_type remote_it = std::begin(update_info_remote_);
         iter_type local_it = update_info_local_.find(remote_it->first);
-        qDebug()<<"download_update_contents : "<<remote_it->second.display_name_;        
+        QLOG_INFO()<<"download_update_contents : "<<remote_it->second.display_name_;
         QString remote_name = remote_it->second.display_name_;
         if(local_it == std::end(update_info_local_)){
-            qDebug()<<"local_it == std::end(update_info_local_)";
+            QLOG_INFO()<<"local_it == std::end(update_info_local_)";
             auto const info = remote_it->second;
             update_info_remote_.erase(remote_it);
             download_update_content(info);
         }else{
             if(remote_it->second.version_ > local_it->second.version_){
-                qDebug()<<"remote_it->second.version_ > local_it->second.version_";
+                QLOG_INFO()<<"remote_it->second.version_ > local_it->second.version_";
                 auto const info = remote_it->second;
                 update_info_local_.erase(local_it);
                 update_info_remote_.erase(remote_it);
                 download_update_content(info);
             }else{
-                qDebug()<<"do not need to update content : "<<remote_it->second.display_name_;
+                QLOG_INFO()<<"do not need to update content : "<<remote_it->second.display_name_;
                 update_info_local_.erase(local_it);
                 update_info_remote_.erase(remote_it);
                 download_update_contents();
             }
         }
-        qDebug()<<remote_name<<" : erase update info remote";
+        QLOG_INFO()<<remote_name<<" : erase update info remote";
     }else{
         update_local_update_file();
         download_erase_list();
@@ -243,7 +243,7 @@ void auto_updater::download_update_contents()
 
 void auto_updater::update_info_remote(QNetworkReply *reply)
 {
-    qDebug()<<__func__;
+    QLOG_INFO()<<__func__;
     QFile file("update_info_remote.xml");
     if(file.open(QIODevice::WriteOnly)){
         if(update_info_local_["update_info"].unzip_ == "qcompress_file"){
@@ -263,16 +263,16 @@ void auto_updater::update_info_remote(QNetworkReply *reply)
                 update_info_local_.erase("update_info");
                 download_update_contents();
             }else{
-                qDebug()<<"nothing to update because version is equal or less";
+                QLOG_INFO()<<"nothing to update because version is equal or less";
                 start_updated_app();
             }
         }else{
-            qDebug()<<"update_info at remote repository do not contain update_info,"
+            QLOG_INFO()<<"update_info at remote repository do not contain update_info,"
                       "update failed";
             exit_app();
         }
     }else{
-        qDebug()<<"Cannot write data into update_info_remote.xml, "
+        QLOG_ERROR()<<"Cannot write data into update_info_remote.xml, "
                   "fail to update";
         exit_app();
     }
@@ -284,7 +284,7 @@ void auto_updater::update_local_update_file()
                     "/update_info_remote.xml",
                     QCoreApplication::applicationDirPath() +
                     "/update_info_local.xml")){
-        qDebug()<<"cannot update update_info_local.xml";
+        QLOG_ERROR()<<"cannot update update_info_local.xml";
     }
 }
 
@@ -294,11 +294,11 @@ void auto_updater::update_info_finished()
     if(reply){
         guard_delete_later<QNetworkReply> guard(reply);
         if(reply->error() == QNetworkReply::NoError){
-            qDebug()<<"start update info remote";
+            QLOG_INFO()<<"start update info remote";
             update_info_remote(reply);
         }else{
-            qDebug()<<"cannot update update_info.xml : "<<reply->errorString();
-            qDebug()<<"please fix the network issue before update";
+            QLOG_ERROR()<<"cannot update update_info.xml : "<<reply->errorString();
+            QLOG_ERROR()<<"please fix the network issue before update";
             exit_app();
         }
     }

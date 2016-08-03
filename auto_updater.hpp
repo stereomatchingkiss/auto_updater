@@ -40,11 +40,14 @@ private:
     void update_local_update_file();
 
     QString app_to_start_;
+    //record the contents really need to updated
     std::map<QNetworkReply*, update_info> download_details_;
     QNetworkAccessManager *manager_;
     QString parent_path_;
     std::map<QString, update_info> update_info_local_;
     std::map<QString, update_info> update_info_remote_;    
+    //save the
+    std::map<QNetworkReply*, update_info> update_records_;
 };
 
 #endif // AUTO_UPDATER_H
