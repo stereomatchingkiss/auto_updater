@@ -26,7 +26,7 @@ private:
     void decompress_update_content(update_info const &info,
                                    QNetworkReply *reply);
     void download_erase_list();
-    void download_remote_update_info(QNetworkReply *reply);
+    bool download_remote_update_info(QNetworkReply *reply);
     void download_update_contents();
     void download_update_content(update_info local_info,
                                  update_info remote_info);
@@ -39,7 +39,7 @@ private:
     void update_content();
     void update_local_info_finished();
     void update_local_update_file();
-    void update_remote_contents(QNetworkReply *reply, iter_type local_it);
+    void update_remote_contents(QNetworkReply *reply);
 
     QString app_to_start_;        
     QNetworkAccessManager *manager_;

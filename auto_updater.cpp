@@ -257,14 +257,12 @@ void auto_updater::download_update_contents()
     }
 }
 
-void auto_updater::update_remote_contents(QNetworkReply *reply,
-                                          iter_type local_it)
+void auto_updater::update_remote_contents(QNetworkReply *reply)
 {
-    update_info_parser parser;
-    update_info_remote_ = parser.read(QCoreApplication::applicationDirPath() +
-                                      "/update_info_remote.xml");
+    iter_type local_it = update_info_local_.find("update_info");
     iter_type remote_it = update_info_remote_.find("update_info");
-    if(remote_it != std::end(update_info_remote_)){
+    if(remote_it != std::end(update_info_remote_) &&
+            local_it != std::end(update_info_local_)){
         if(remote_it->second.version_ > local_it->second.version_){
             update_records_.insert({reply,
                                     {local_it->second, remote_it->second}});
@@ -282,7 +280,7 @@ void auto_updater::update_remote_contents(QNetworkReply *reply,
     }
 }
 
-void auto_updater::download_remote_update_info(QNetworkReply *reply)
+bool auto_updater::download_remote_update_info(QNetworkReply *reply)
 {
     QLOG_INFO()<<"enter "<<__func__;
     QFile file("update_info_remote.xml");
@@ -296,13 +294,19 @@ void auto_updater::download_remote_update_info(QNetworkReply *reply)
             }
             file.close();
 
-            update_remote_contents(reply, local_it);
+            update_info_parser parser;
+            update_info_remote_ = parser.read(QCoreApplication::applicationDirPath() +
+                                              "/update_info_remote.xml");
+
+            return true;
         }
     }else{
         QLOG_ERROR()<<"Cannot write data into update_info_remote.xml, "
                       "fail to update";
         exit_app();
     }
+
+    return false;
 }
 
 void auto_updater::update_local_update_file()
@@ -323,7 +327,9 @@ void auto_updater::update_local_info_finished()
         guard_delete_later<QNetworkReply> guard(reply);
         if(reply->error() == QNetworkReply::NoError){
             QLOG_INFO()<<"start update info remote";
-            download_remote_update_info(reply);
+            if(download_remote_update_info(reply)){
+                update_remote_contents(reply);
+            }
         }else{
             QLOG_ERROR()<<"cannot update update_info.xml : "<<reply->errorString();
             QLOG_ERROR()<<"please fix the network issue before update";
