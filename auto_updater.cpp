@@ -34,6 +34,7 @@ auto_updater::auto_updater(QString const &app_to_start, QObject *parent) :
 void auto_updater::start()
 {    
     download_details_.clear();
+    update_records_.clear();
     QLOG_INFO()<<"start config parse";
     update_info_parser info_parser;
     update_info_local_ = info_parser.read(QCoreApplication::applicationDirPath() +
@@ -183,20 +184,32 @@ void auto_updater::update_content()
     QNetworkReply *reply = qobject_cast<QNetworkReply*>(sender());
     if(reply){
         guard_delete_later<QNetworkReply> guard(reply);
-        download_iter_type it = download_details_.find(reply);
-        if(it != std::end(download_details_)){
-            QLOG_INFO()<<"update_content of : "<<it->second.display_name_;
-            decompress_update_content(it, reply);
-            QLOG_INFO()<<"update_content "<<it->second.display_name_<<" finished";
+        if(reply->error() == QNetworkReply::NoError){
+            download_iter_type it = download_details_.find(reply);
+            if(it != std::end(download_details_)){
+                QLOG_INFO()<<"update_content of : "<<it->second.display_name_;
+                decompress_update_content(it, reply);
+                QLOG_INFO()<<"update_content "<<it->second.display_name_<<" finished";
+            }
+        }else{
+            auto it = update_records_.find(reply);
+            QString display_name;
+            if(it != std::end(update_records_)){
+                display_name = " " + it->second.second.display_name_ + " ";
+                it->second.second.version_ = it->second.first;
+            }
+            QLOG_ERROR()<<QString("download%1fail : %2").
+                          arg(display_name).arg(reply->errorString());
         }
     }
     download_update_contents();
 }
 
-void auto_updater::download_update_content(update_info info)
+void auto_updater::download_update_content(update_info info, QString local_ver_num)
 {
     QNetworkReply *reply = manager_->get(QNetworkRequest(info.url_));
-    download_details_.insert(std::make_pair(reply, info));
+    update_records_.insert({reply, {local_ver_num, info}});
+    download_details_.insert({reply, info});
     auto const name = info.display_name_;
     connect(reply, &QNetworkReply::finished, this,
             &auto_updater::update_content);
@@ -204,29 +217,28 @@ void auto_updater::download_update_content(update_info info)
             [this, name](qint64 bytesReceived, qint64 bytesTotal)
     {
         QLOG_INFO()<<QString("Download %1 : %2/%3").arg(name).
-                  arg(bytesReceived).arg(bytesTotal);
+                     arg(bytesReceived).arg(bytesTotal);
     });
 }
 
 void auto_updater::download_update_contents()
 {        
-    if(!update_info_local_.empty() && !update_info_remote_.empty()){
+    if(!update_info_remote_.empty()){
         iter_type remote_it = std::begin(update_info_remote_);
         iter_type local_it = update_info_local_.find(remote_it->first);
         QLOG_INFO()<<"download_update_contents : "<<remote_it->second.display_name_;
-        QString remote_name = remote_it->second.display_name_;
+        auto const info = remote_it->second;
         if(local_it == std::end(update_info_local_)){
             QLOG_INFO()<<"local_it == std::end(update_info_local_)";
-            auto const info = remote_it->second;
             update_info_remote_.erase(remote_it);
-            download_update_content(info);
+            download_update_content(info, "");
         }else{
             if(remote_it->second.version_ > local_it->second.version_){
                 QLOG_INFO()<<"remote_it->second.version_ > local_it->second.version_";
-                auto const info = remote_it->second;
+                auto const version = local_it->second.version_;
                 update_info_local_.erase(local_it);
                 update_info_remote_.erase(remote_it);
-                download_update_content(info);
+                download_update_content(info, version);
             }else{
                 QLOG_INFO()<<"do not need to update content : "<<remote_it->second.display_name_;
                 update_info_local_.erase(local_it);
@@ -234,7 +246,7 @@ void auto_updater::download_update_contents()
                 download_update_contents();
             }
         }
-        QLOG_INFO()<<remote_name<<" : erase update info remote";
+        QLOG_INFO()<<info.display_name_<<" : erase update info remote";
     }else{
         update_local_update_file();
         download_erase_list();
@@ -268,12 +280,12 @@ void auto_updater::update_info_remote(QNetworkReply *reply)
             }
         }else{
             QLOG_INFO()<<"update_info at remote repository do not contain update_info,"
-                      "update failed";
+                         "update failed";
             exit_app();
         }
     }else{
         QLOG_ERROR()<<"Cannot write data into update_info_remote.xml, "
-                  "fail to update";
+                      "fail to update";
         exit_app();
     }
 }

@@ -27,7 +27,8 @@ private:
                                    QNetworkReply *reply);
     void download_erase_list();
     void download_update_contents();
-    void download_update_content(update_info info);
+    void download_update_content(update_info info,
+                                 QString local_ver_num);
 
     void erase_old_contents();
     void exit_app();
@@ -46,8 +47,12 @@ private:
     QString parent_path_;
     std::map<QString, update_info> update_info_local_;
     std::map<QString, update_info> update_info_remote_;    
-    //save the
-    std::map<QNetworkReply*, update_info> update_records_;
+    //save the info need to write into update_info_local.xml
+    //first string is the version of local_content,
+    //update_info is the update info from remote server
+    //if the content info do not exist in the update_info_local.xml,
+    //the QString will be empty
+    std::map<QNetworkReply*, std::pair<QString, update_info>> update_records_;
 };
 
 #endif // AUTO_UPDATER_H
