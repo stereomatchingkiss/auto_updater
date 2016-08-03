@@ -307,12 +307,13 @@ void auto_updater::download_remote_update_info(QNetworkReply *reply)
 
 void auto_updater::update_local_update_file()
 {
-    if(!QFile::copy(QCoreApplication::applicationDirPath() +
-                    "/update_info_remote.xml",
-                    QCoreApplication::applicationDirPath() +
-                    "/update_info_local.xml")){
-        QLOG_ERROR()<<"cannot update update_info_local.xml";
+    std::vector<std::pair<update_info, update_info>> info_vec;
+    for(auto const &pair : update_records_){
+        info_vec.emplace_back(pair.second);
     }
+    update_info_parser::write(info_vec,
+                              QCoreApplication::applicationDirPath() +
+                              "/update_info_local.xml");
 }
 
 void auto_updater::update_local_info_finished()
