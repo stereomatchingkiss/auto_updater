@@ -44,7 +44,7 @@ void auto_updater::start()
     if(update_it != std::end(update_info_local_)){
         auto *reply = manager_->get(QNetworkRequest(update_it->second.url_));
         connect(reply, &QNetworkReply::finished, this,
-                &auto_updater::update_info_finished);
+                &auto_updater::update_local_info_finished);
         connect(reply, &QNetworkReply::downloadProgress,
                 [this](qint64 bytesReceived, qint64 bytesTotal)
         {
@@ -253,35 +253,46 @@ void auto_updater::download_update_contents()
     }
 }
 
-void auto_updater::update_info_remote(QNetworkReply *reply)
+void auto_updater::update_remote_contents(QNetworkReply *reply,
+                                          iter_type local_it)
 {
-    QLOG_INFO()<<__func__;
+    update_info_parser parser;
+    update_info_remote_ = parser.read(QCoreApplication::applicationDirPath() +
+                                      "/update_info_remote.xml");
+    iter_type remote_it = update_info_remote_.find("update_info");
+    if(remote_it != std::end(update_info_remote_)){
+        if(remote_it->second.version_ > local_it->second.version_){
+            update_records_.insert({reply,
+                                    {local_it->second.version_, remote_it->second}});
+            update_info_remote_.erase(remote_it);
+            update_info_local_.erase(local_it);
+            download_update_contents();
+        }else{
+            QLOG_INFO()<<"nothing to update because version is equal or less";
+            start_updated_app();
+        }
+    }else{
+        QLOG_INFO()<<"update_info at remote repository do not contain update_info,"
+                     "update failed";
+        exit_app();
+    }
+}
+
+void auto_updater::download_remote_update_info(QNetworkReply *reply)
+{
+    QLOG_INFO()<<"enter "<<__func__;
     QFile file("update_info_remote.xml");
     if(file.open(QIODevice::WriteOnly)){
-        if(update_info_local_["update_info"].unzip_ == "qcompress_file"){
-            file.write(qUncompress(reply->readAll()));
-        }else{
-            file.write(reply->readAll());
-        }
-        file.close();
-
-        update_info_parser parser;
-        update_info_remote_ = parser.read(QCoreApplication::applicationDirPath() +
-                                          "/update_info_remote.xml");
-        auto it = update_info_remote_.find("update_info");
-        if(it != std::end(update_info_remote_)){
-            if(it->second.version_ > update_info_local_["update_info"].version_){
-                update_info_remote_.erase(it);
-                update_info_local_.erase("update_info");
-                download_update_contents();
+        iter_type local_it = update_info_local_.find("update_info");
+        if(local_it != std::end(update_info_local_)){
+            if(local_it->second.unzip_ == "qcompress_file"){
+                file.write(qUncompress(reply->readAll()));
             }else{
-                QLOG_INFO()<<"nothing to update because version is equal or less";
-                start_updated_app();
+                file.write(reply->readAll());
             }
-        }else{
-            QLOG_INFO()<<"update_info at remote repository do not contain update_info,"
-                         "update failed";
-            exit_app();
+            file.close();
+
+            update_remote_contents(reply, local_it);
         }
     }else{
         QLOG_ERROR()<<"Cannot write data into update_info_remote.xml, "
@@ -300,14 +311,14 @@ void auto_updater::update_local_update_file()
     }
 }
 
-void auto_updater::update_info_finished()
+void auto_updater::update_local_info_finished()
 {
     auto *reply = qobject_cast<QNetworkReply*>(sender());
     if(reply){
         guard_delete_later<QNetworkReply> guard(reply);
         if(reply->error() == QNetworkReply::NoError){
             QLOG_INFO()<<"start update info remote";
-            update_info_remote(reply);
+            download_remote_update_info(reply);
         }else{
             QLOG_ERROR()<<"cannot update update_info.xml : "<<reply->errorString();
             QLOG_ERROR()<<"please fix the network issue before update";

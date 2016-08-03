@@ -26,6 +26,7 @@ private:
     void decompress_update_content(download_iter_type it,
                                    QNetworkReply *reply);
     void download_erase_list();
+    void download_remote_update_info(QNetworkReply *reply);
     void download_update_contents();
     void download_update_content(update_info info,
                                  QString local_ver_num);
@@ -36,9 +37,9 @@ private:
     void start_updated_app();
 
     void update_content();
-    void update_info_finished();
-    void update_info_remote(QNetworkReply *reply);
+    void update_local_info_finished();
     void update_local_update_file();
+    void update_remote_contents(QNetworkReply *reply, iter_type local_it);
 
     QString app_to_start_;
     //record the contents really need to updated
