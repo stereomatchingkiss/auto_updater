@@ -8,6 +8,7 @@ The dependencies of this project are
 
 1. [Qt5.6.x](https://www.qt.io/download-open-source/#section-2)
 2. [qt_enhance/compressor](https://github.com/stereomatchingkiss/qt_enhance/tree/master/compressor)
+3. [QsLog](https://bitbucket.org/codeimproved/qslog)
 
 #How to build them
 
@@ -23,6 +24,10 @@ Include the sources files
 2. folder_compressor.cpp
 
 into your make file
+
+##QsLog
+
+clone the codes by github, include the QsLog.pri in .pro file
 
 #How to use it
 
