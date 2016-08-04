@@ -32,22 +32,33 @@ auto_updater::auto_updater(QString const &app_to_start, QObject *parent) :
     }
 }
 
-bool auto_updater::need_to_update()
+void auto_updater::check_need_to_update()
 {
+    can_update_remote_contents_ = false;
     prepare_download_info();
-    if(update_info_local_.find("update_info") != std::end(update_info_local_)){
-        if(update_info_remote_.find("update_info") != std::end(update_info_remote_)){
-            return true;
-        }
-    }
-
-    return false;
 }
 
 void auto_updater::start()
 {
     can_update_remote_contents_ = true;
     prepare_download_info();
+}
+
+bool auto_updater::need_to_update() const
+{
+    auto const local_it = update_info_local_.find("update_info");
+    if(local_it != std::end(update_info_local_)){
+        QLOG_INFO()<<__func__<< " : can find local update info";
+        auto const remote_it = update_info_remote_.find("update_info");
+        if(remote_it != std::end(update_info_remote_)){
+            QLOG_INFO()<<__func__<< " : can find remote update info";
+            if(local_it->second.version_ < remote_it->second.version_){
+                return true;
+            }
+        }
+    }
+
+    return false;
 }
 
 void auto_updater::decompress_update_content(update_info const &info,
@@ -147,6 +158,7 @@ void auto_updater::prepare_download_info()
 
     auto update_it = update_info_local_.find("update_info");
     if(update_it != std::end(update_info_local_)){
+        QLOG_INFO()<<__func__<<" : can find iter of local update info";
         auto *reply = manager_->get(QNetworkRequest(update_it->second.url_));
         connect(reply, &QNetworkReply::finished, this,
                 &auto_updater::update_local_info_finished);
@@ -156,6 +168,9 @@ void auto_updater::prepare_download_info()
             QLOG_INFO()<<QString("Download update_info : %1/%2").arg(bytesReceived).
                          arg(bytesTotal);
         });
+    }else{
+        QLOG_ERROR()<<"Cannot find update_info_local.xml, update failed";
+        exit_app();
     }
 }
 
@@ -343,16 +358,29 @@ void auto_updater::update_local_info_finished()
 {
     auto *reply = qobject_cast<QNetworkReply*>(sender());
     if(reply){
+        QLOG_INFO()<<"update local info has valid reply";
         guard_delete_later<QNetworkReply> guard(reply);
         if(reply->error() == QNetworkReply::NoError){
             QLOG_INFO()<<"start update info remote";
-            if(download_remote_update_info(reply) && can_update_remote_contents_){
-                update_remote_contents(reply);
+            if(download_remote_update_info(reply)){
+                if(can_update_remote_contents_){
+                    update_remote_contents(reply);
+                }else{
+                    if(need_to_update()){
+                        QLOG_INFO()<<"need to update";
+                    }else{
+                        QLOG_INFO()<<"nothing to update";
+                    }
+                    exit_app();
+                }
             }
         }else{
             QLOG_ERROR()<<"cannot update update_info.xml : "<<reply->errorString();
             QLOG_ERROR()<<"please fix the network issue before update";
             exit_app();
         }
+    }else{
+        QLOG_ERROR()<<"update local info has invalid reply";
+        exit_app();
     }
 }

@@ -15,13 +15,14 @@ class auto_updater : public QObject
 public:
     explicit auto_updater(QString const &app_to_start, QObject *parent = nullptr);
 
-    bool need_to_update();
+    void check_need_to_update();
     void start();    
 
 private:
     using iter_type = std::map<QString, update_info>::iterator;
     using download_iter_type = std::map<QNetworkReply*, update_info>::iterator;
 
+    bool need_to_update() const;
     std::map<QString, QString> create_file_maps() const;
 
     void decompress_update_content(update_info const &info,

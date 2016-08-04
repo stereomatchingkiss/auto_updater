@@ -24,11 +24,29 @@ int main(int argc, char *argv[])
     parser.addHelpOption();
     parser.addVersionOption();
 
-    QCommandLineOption app_to_start(QStringList() << "a" << "app_to_start",
+    QCommandLineOption app_to_start(QStringList()<<"a"<<"app_to_start",
                                     QCoreApplication::translate("main", "App to start update update finished"),
                                     "app");
     parser.addOption(app_to_start);
+
+    QCommandLineOption need_to_update(QStringList()<<"n"<<"need_to_update",
+                                      QCoreApplication::translate("main", "After you specify this option,"
+                                                                          "the app will compare the version number "
+                                                                          "of local and remote server to find out "
+                                                                          "auto update should start or not. If yes, "
+                                                                          "it will output \"need to update\", else "
+                                                                          "\"nothing to update\". After you specify this "
+                                                                          "option, the app will not download another update "
+                                                                          "contents but compare the version number."));
+    parser.addOption(need_to_update);
     parser.process(a);
+
+    if(parser.isSet(need_to_update)){
+        auto_updater au(parser.value(app_to_start));
+        au.check_need_to_update();
+
+        return a.exec();
+    }
 
     if(!parser.isSet(app_to_start)){
         QLOG_WARN()<<"Has not specify app to start, auto_update will "
