@@ -25,7 +25,7 @@ int main(int argc, char *argv[])
     parser.addVersionOption();
 
     QCommandLineOption app_to_start(QStringList()<<"a"<<"app_to_start",
-                                    QCoreApplication::translate("main", "App to start update update finished"),
+                                    QCoreApplication::translate("main", "App to start update after update finished"),
                                     "app");
     parser.addOption(app_to_start);
 
