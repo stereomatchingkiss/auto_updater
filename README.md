@@ -190,3 +190,7 @@ Do not support authentication, however I do not think this is a big deal, becaus
 
 If you found any bugs or any features request, please open the issue at github.
 I will try to solve them when I have time.
+
+# License
+
+auto_updater is free and open-source software, it is released under the [DBAD](https://github.com/stereomatchingkiss/similar_vision/blob/master/DBAD%20License) license.
