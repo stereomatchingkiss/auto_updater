@@ -146,6 +146,10 @@ Show help
 auto_update --help
 ```
 
+# Limitation
+
+Do not support authentication, however I do not think this is a big deal, because this tool is designed for open source project.
+
 # Bugs report and features request
 
 If you found any bugs or any features request, please open the issue at github.
