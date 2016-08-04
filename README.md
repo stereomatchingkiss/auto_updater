@@ -193,4 +193,4 @@ I will try to solve them when I have time.
 
 # License
 
-auto_updater is free and open-source software, it is released under the [DBAD](https://github.com/stereomatchingkiss/similar_vision/blob/master/DBAD%20License) license.
+auto_updater is free and open-source software, it is released under the [DBAD](https://github.com/stereomatchingkiss/similar_vision/blob/master/DBAD_License.md) license.
