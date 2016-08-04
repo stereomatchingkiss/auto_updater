@@ -141,6 +141,42 @@ Update the apps with auto restart
 auto_update -a $${PARENT}/similar_vision
 ```
 
+Check the app need to update or not based on the version number of of update_info(DisplayName) in update_local_info.xml and 
+update_remote_info.xml
+
+```
+auto_update -n
+```
+
+You can use it in your program by detecting the response of stdout 
+
+```cpp
+    QString const app_dir_path = QCoreApplication::applicationDirPath();
+    QProcess process;
+    struct kill_process
+    {
+        kill_process(QProcess *p) : process_(p) {}
+        ~kill_process() { process_->kill(); }
+
+    private:
+        QProcess *process_;
+    };
+    kill_process kp(&process);
+
+    process.start(app_dir_path + "/auto_updater/auto_updater",
+                  QStringList()<<"-n",
+                  QIODevice::ReadOnly);
+    if(process.waitForFinished(-1)){
+        QString const process_output(process.readAll());
+        if(process_output.contains("need to update")){
+            qDebug()<<"can update";
+        }else{
+            qDebug()<<"can not update";
+        }
+    }
+```
+
+
 Show help
 ```
 auto_update --help
