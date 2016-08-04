@@ -18,6 +18,7 @@
 #include <QtGlobal>
 #include <QUrl>
 
+#include <iostream>
 #include <iterator>
 
 auto_updater::auto_updater(QString const &app_to_start, QObject *parent) :
@@ -367,9 +368,11 @@ void auto_updater::update_local_info_finished()
                     update_remote_contents(reply);
                 }else{
                     if(need_to_update()){
+                        std::cout<<"need to update";
                         QLOG_INFO()<<"need to update";
                     }else{
-                        QLOG_INFO()<<"nothing to update";
+                        std::cout<<"nothing to update";
+                        QLOG_INFO()<<"nothing to update";                        
                     }
                     exit_app();
                 }
